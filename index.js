@@ -45,16 +45,16 @@ function configureArduinoChannel() {
         baudRate: 9600 // this is synced to what was set for the Arduino Code
     });
 
-    port.on('open', function() {
+    arduinoPort.on('open', function() {
         console.log('port is open');
         isOpen = true;
     });
 
-    port.on('error', function(err) {
+    arduinoPort.on('error', function(err) {
         console.log('Error: ', err.message);
     });
 
-    port.on('data', function (data) {
+    arduinoPort.on('data', function (data) {
         console.log('Data: ' + data);
     });
 }
