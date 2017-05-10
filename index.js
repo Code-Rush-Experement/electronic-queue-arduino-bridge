@@ -1,39 +1,38 @@
 'use strict';
 
-const app = require('http').createServer();
-const io = require('socket.io')(app);
+const io = require('socket.io-client');
 const SerialPort = require('serialport');
 
-const host = process.env.host || 'localhost';
-const port = process.env.port || 81;
+const host = process.env.host || '62.109.20.84';
+// const port = process.env.port || 80;
 
-const serialPort = 'COM19';
+const serialPort = 'COM3';
 
 var arduinoPort;
 var isOpen = false;
 
+var socket = io('http://62.109.20.84');
 
 configureArduinoChannel();
 configureSocket();
 
-
-app.listen(port, host);
-
-
-
-
 function configureSocket() {
-    io.on('connection', function (socket) {
-        socket.on('updateTopMostTicket', function (data) {
-            var message = String(data && data.ticket && data.ticket.shortKey || "");
-            message && isOpen && port.write(message, function(err) {
-                if (err) {
-                    return console.log('Error on write: ', err.message);
-                }
-                console.log('message written', message);
-            });
-            port.flush();
+
+    socket.on('updateTopMostTicket', function (data) {
+        console.log('socket - updateTopMostTicket ' + JSON.stringify(data));
+
+        var message = String(data && data.ticket && data.ticket.shortKey || "0");
+        isOpen && arduinoPort.write(message, function(err) {
+            if (err) {
+                return console.log('Error on write: ', err.message);
+            }
+            console.log('message written', message);
         });
+        arduinoPort.flush();
+    });
+
+    socket.on('error', function (data) {
+        console.log('error', data);
     });
 }
 
