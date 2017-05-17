@@ -1,38 +1,65 @@
 'use strict';
 
+const bluebird = require('bluebird');
 const io = require('socket.io-client');
 const SerialPort = require('serialport');
 
 const host = process.env.host || '62.109.20.84';
-// const port = process.env.port || 80;
+const serialPort = process.env.comPort || 'COM3';
+const socket = io(`http://${host}`);
 
-const serialPort = 'COM3';
+let arduinoPort;
+let isOpen = false;
 
-var arduinoPort;
-var isOpen = false;
+const promiseListPorts = bluebird.promisify(SerialPort.list);
 
-var socket = io('http://62.109.20.84');
+let topMostData;
+
+promiseListPorts().then((ports) => {
+    console.log('list of available ports:');
+    ports.forEach(function(port) {
+        console.log(port.comName);
+        console.log(port.pnpId);
+        console.log(port.manufacturer);
+    });
+    console.log('---');
+}).catch((err) => {
+    console.error(err);
+});
 
 configureArduinoChannel();
 configureSocket();
 
-function configureSocket() {
+function flushStateToArduino() {
+    if (!isOpen) {
+        console.warn('attempt to flush state to unprepared arduino connection');
+        return
+    }
 
+    if (!topMostData) {
+        console.warn('data is not defined to be flushed to the arduino');
+        return
+    }
+
+    console.log('flush state ' + JSON.stringify(topMostData));
+    const message = String(topMostData.totalCount || "0");
+    arduinoPort.write(message, function(err) {
+        if (err) {
+            return console.log('Error on write: ', err.message);
+        }
+        console.log('message written', message);
+    });
+}
+
+function configureSocket() {
     socket.on('updateTopMostTicket', function (data) {
         console.log('socket - updateTopMostTicket ' + JSON.stringify(data));
-
-        var message = String(data && data.ticket && data.ticket.shortKey || "0");
-        isOpen && arduinoPort.write(message, function(err) {
-            if (err) {
-                return console.log('Error on write: ', err.message);
-            }
-            console.log('message written', message);
-        });
-        arduinoPort.flush();
+        topMostData = data;
+        flushStateToArduino();
     });
 
     socket.on('error', function (data) {
-        console.log('error', data);
+        console.error('error', data);
     });
 }
 
@@ -47,6 +74,7 @@ function configureArduinoChannel() {
     arduinoPort.on('open', function() {
         console.log('port is open');
         isOpen = true;
+        flushStateToArduino();
     });
 
     arduinoPort.on('error', function(err) {
