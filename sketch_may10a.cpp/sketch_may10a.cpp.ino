@@ -11,6 +11,7 @@ void setup() {
   pinMode(p4, OUTPUT);
 
   Serial.begin(9600);
+  Serial.setTimeout(50);
 }
 
 void loop() {
@@ -23,16 +24,16 @@ void loop() {
         digitalWrite(p3, LOW);        
         digitalWrite(p4, LOW);
         
-        if (led & 0x01) {
+        if (led > 0) {
           digitalWrite(p1, HIGH);
         }
-        if (led & 0x02) {
+        if (led > 1) {
           digitalWrite(p2, HIGH);
         }
-        if (led & 0x04) {
+        if (led > 2) {
           digitalWrite(p3, HIGH);
         }
-        if (led & 0x08) {
+        if (led > 3) {
           digitalWrite(p4, HIGH);
         }
 
