@@ -6,7 +6,7 @@ const SerialPort = require('serialport');
 
 const host = process.env.host || '62.109.20.84';
 const serialPort = process.env.comPort || 'COM3';
-const socket = io(`http://${host}`);
+const socket = io.connect(`${host}`, { rejectUnauthorized: false });
 
 let arduinoPort;
 let isOpen = false;
@@ -60,6 +60,30 @@ function configureSocket() {
 
     socket.on('error', function (data) {
         console.error('error', data);
+    });
+
+    socket.on('connect', function(){
+        console.log('connect');
+    });
+
+    socket.on('event', function(data){
+        console.log('event: ' + data);
+    });
+
+    socket.on('disconnect', function(){
+        console.log('disconnect');
+    });
+
+    socket.on('reconnecting', function(){
+        console.log('reconnecting');
+    });
+
+    socket.on('reconnect_error', function(error){
+        console.log('reconnect_error ' + JSON.stringify(error));
+    });
+
+    socket.on('reconnect_failed', function(){
+        console.log('reconnect_failed');
     });
 }
 
