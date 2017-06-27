@@ -1,14 +1,23 @@
+#include <Servo.h>
 
 int p1 = 8;
 int p2 = 9;
 int p3 = 10;
 int p4 = 11;
 
+int pServo = 5;
+bool wasOn = false;
+
+Servo servo;
+
 void setup() {
   pinMode(p1, OUTPUT);
   pinMode(p2, OUTPUT);
   pinMode(p3, OUTPUT);
   pinMode(p4, OUTPUT);
+
+  servo.attach(pServo);
+  digitalWrite(pServo, 0); 
 
   Serial.begin(9600);
   Serial.setTimeout(50);
@@ -37,7 +46,15 @@ void loop() {
           digitalWrite(p4, HIGH);
         }
 
-        Serial.println(led);
+        if (led > 0) {
+          servo.write(100);
+          wasOn = true;
+        } else {
+          servo.write(0);
+          wasOn = false;
+        }
     }
+
+    delay(100);
 }
 
